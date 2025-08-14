@@ -8,11 +8,11 @@
 		<version>3.5.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>br.com.food-manager</groupId>
-	<artifactId>foodmanager</artifactId>
+	<groupId>br.com.restaurant-hub</groupId>
+	<artifactId>restauranthub</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>foodmanager</name>
-	<description>Demo project for Spring Boot</description>
+	<name>restaurant-hub</name>
+	<description>Management Restaurant System</description>
 	<url/>
 	<licenses>
 		<license/>
