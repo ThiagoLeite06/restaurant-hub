@@ -1,0 +1,75 @@
+package br.com.restaurant_hub.restauranthub.controller;
+
+import br.com.restaurant_hub.restauranthub.mapper.UserMapper;
+import br.com.restaurant_hub.restauranthub.model.User;
+import br.com.restaurant_hub.restauranthub.model.dto.ChangePasswordRequest;
+import br.com.restaurant_hub.restauranthub.model.dto.UserRequest;
+import br.com.restaurant_hub.restauranthub.model.dto.UserResponse;
+import br.com.restaurant_hub.restauranthub.model.dto.UserUpdateRequest;
+import br.com.restaurant_hub.restauranthub.service.UserService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/user")
+public class UserController {
+    private final UserService userService;
+    private final UserMapper userMapper;
+
+    public UserController(UserService userService, UserMapper userMapper) {
+        this.userService = userService;
+        this.userMapper = userMapper;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> findAll() {
+        List<User> users = userService.findAll();
+        List<UserResponse> response = userMapper.toResponseList(users);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
+        User user = userService.findById(id);
+        UserResponse response = userMapper.toResponse(user);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest userRequest) {
+        User user = userMapper.toEntity(userRequest);
+        User saved = userService.save(user);
+        UserResponse response = userMapper.toResponse(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
+
+        User userUpdates = userMapper.toEntityForUpdate(userUpdateRequest);
+        User updated = userService.update(id, userUpdates);
+        UserResponse response = userMapper.toResponse(updated);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(
+            @PathVariable Long id,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        
+        userService.changePassword(id, request.currentPassword(), request.newPassword());
+        return ResponseEntity.noContent().build();
+    }
+}

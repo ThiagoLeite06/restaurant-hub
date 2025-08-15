@@ -1,9 +1,9 @@
-# 🍽️ FoodManager
+# 🍽️ RestaurantHub
 *Sistema de Gestão Compartilhada para Restaurantes*
 
 ## 📋 Sobre o Projeto
 
-O **FoodManager** é um sistema revolucionário desenvolvido para atender um consórcio de restaurantes que buscavam uma solução robusta e econômica para gerenciar suas operações. 
+O **RestaurantHub** é um sistema revolucionário desenvolvido para atender um consórcio de restaurantes que buscavam uma solução robusta e econômica para gerenciar suas operações. 
 
 ### 🎯 O Problema
 Na nossa região, um grupo de restaurantes decidiu contratar estudantes para construir um sistema de gestão para seus estabelecimentos. Essa decisão foi motivada pelo alto custo de sistemas individuais, o que levou os restaurantes a se unirem para desenvolver um sistema único e compartilhado. Esse sistema permitirá que os clientes escolham restaurantes com base na comida oferecida, em vez de se basearem na qualidade do sistema de gestão.
@@ -46,7 +46,7 @@ Desenvolver um backend completo e robusto utilizando o framework Spring Boot, co
 1. **Clone o repositório:**
 ```bash
 git clone <url-do-repositório>
-cd FoodManager
+cd RestaurantHub
 ```
 
 2. **Inicie o banco de dados:**
@@ -55,8 +55,8 @@ docker-compose up -d
 ```
 *Este comando irá:*
 - Criar e iniciar um container MySQL 8.0
-- Configurar o banco de dados `foodmanager`
-- Criar o usuário `foodmanager` com senha `foodmanager`
+- Configurar o banco de dados `restauranthub`
+- Criar o usuário `restauranthub` com senha `restauranthub`
 - Expor a porta 3306 para conexão local
 
 3. **Compile e execute a aplicação:**
@@ -74,9 +74,9 @@ O projeto utiliza **Flyway** para migração automática do banco de dados. As m
 
 **Credenciais do Banco:**
 - **Host:** localhost:3306
-- **Database:** foodmanager
-- **Usuário:** foodmanager
-- **Senha:** foodmanager
+- **Database:** restauranthub
+- **Usuário:** restauranthub
+- **Senha:** restauranthub
 
 ### 🔄 Comandos Úteis
 
@@ -91,7 +91,7 @@ docker-compose down -v
 docker-compose logs mysql
 
 # Acessar o MySQL via linha de comando
-docker exec -it foodmanager-mysql mysql -u foodmanager -p foodmanager
+docker exec -it restauranthub-mysql mysql -u restauranthub -p restauranthub
 ```
 
 ## 📝 Desenvolvimento
@@ -112,11 +112,11 @@ docker exec -it foodmanager-mysql mysql -u foodmanager -p foodmanager
 ### 🗂️ Estrutura do Projeto
 
 ```
-FoodManager/
+RestaurantHub/
 ├── src/
 │   ├── main/
 │   │   ├── java/
-│   │   │   └── br/com/foodmanager/
+│   │   │   └── br/com/restauranthub/
 │   │   └── resources/
 │   │       ├── application.properties
 │   │       └── db/migration/

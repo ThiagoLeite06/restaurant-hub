@@ -1,0 +1,16 @@
+package br.com.restaurant_hub.restauranthub.service;
+
+import br.com.restaurant_hub.restauranthub.model.User;
+
+import java.util.List;
+
+public interface UserService {
+    User save(User user);
+    User findById(Long id);
+    List<User> findAll();
+    void deleteById(Long id);
+    User update(Long id, User user);
+    User findByLogin(String login);
+    void validateUserData(User user, Long excludeId);
+    void changePassword(Long userId, String currentPassword, String newPassword);
+}

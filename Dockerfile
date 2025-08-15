@@ -5,7 +5,7 @@
 FROM eclipse-temurin:21-jdk AS builder
 
 # Define o diretório de trabalho principal para a etapa de build
-WORKDIR /app-food-manager
+WORKDIR /app-restaurant-hub
 
 # Copia os arquivos essenciais para o gerenciamento de dependências do Maven
 COPY pom.xml .
@@ -33,11 +33,11 @@ RUN ./mvnw clean package -DskipTests
 FROM eclipse-temurin:21-jre
 
 # Define o diretório de trabalho final
-WORKDIR /app-food-manager
+WORKDIR /app-restaurant-hub
 
 # Copia apenas o artefato compilado (.jar) da etapa de build anterior
 # Isso mantém a imagem final pequena e segura, sem código-fonte ou ferramentas de build.
-COPY --from=builder /app-food-manager/target/*.jar app.jar
+COPY --from=builder /app-restaurant-hub/target/*.jar app.jar
 
 # Expõe a porta que a aplicação Spring Boot usa por padrão
 EXPOSE 8080
