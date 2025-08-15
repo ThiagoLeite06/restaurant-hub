@@ -1,11 +1,11 @@
 CREATE TABLE users
 (
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id           BIGSERIAL PRIMARY KEY,
     name         VARCHAR(255) NOT NULL,
     email        VARCHAR(255) NOT NULL UNIQUE,
     login        VARCHAR(255) NOT NULL UNIQUE,
     password     VARCHAR(255) NOT NULL,
-    last_updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     address      VARCHAR(500),
     user_type    VARCHAR(50) DEFAULT 'CUSTOMER',
     enabled      BOOLEAN DEFAULT TRUE,

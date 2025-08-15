@@ -7,45 +7,40 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      mysql_db:
+      postgres_db:
         condition: service_healthy
-    env_file:
-      - .env.docker
     environment:
-      SPRING_DATASOURCE_URL: ${DB_URL}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASS}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/restauranthub
+      SPRING_DATASOURCE_USERNAME: restaurantadmin
+      SPRING_DATASOURCE_PASSWORD: password123
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_PROFILES_ACTIVE: prod
     networks:
       - backend-net
 
-  mysql_db:
-    image: mysql:8.0
+  postgres_db:
+    image: postgres:16
     platform: linux/amd64
-    container_name: mysql_db
+    container_name: postgres_db
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
-    env_file:
-      - .env.docker
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: restauranthub
+      POSTGRES_USER: restaurantadmin
+      POSTGRES_PASSWORD: password123
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - backend-net
 
 volumes:
-  mysql_data:
+  postgres_data:
 
 networks:
   backend-net:
