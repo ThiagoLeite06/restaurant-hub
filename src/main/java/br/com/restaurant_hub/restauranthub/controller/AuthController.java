@@ -1,10 +1,9 @@
 package br.com.restaurant_hub.restauranthub.controller;
 
 import br.com.restaurant_hub.restauranthub.mapper.UserMapper;
-import br.com.restaurant_hub.restauranthub.model.User;
-import br.com.restaurant_hub.restauranthub.model.UserType;
-import br.com.restaurant_hub.restauranthub.model.dto.UserRequest;
-import br.com.restaurant_hub.restauranthub.model.dto.UserResponse;
+import br.com.restaurant_hub.restauranthub.entity.UserEntity;
+import br.com.restaurant_hub.restauranthub.controller.dto.CreateUserRequest;
+import br.com.restaurant_hub.restauranthub.controller.dto.UserResponse;
 import br.com.restaurant_hub.restauranthub.security.JwtUtils;
 import br.com.restaurant_hub.restauranthub.service.UserService;
 import jakarta.validation.Valid;
@@ -17,8 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -29,8 +26,8 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final UserMapper userMapper;
 
-    public AuthController(UserService userService, PasswordEncoder passwordEncoder, 
-                         AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserMapper userMapper) {
+    public AuthController(UserService userService, PasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserMapper userMapper) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
@@ -39,13 +36,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRequest userRequest) {
-        User user = userMapper.toEntity(userRequest);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setUserType(UserType.CUSTOMER);
-        user.setLastUpdated(new Date());
-
-        User savedUser = userService.save(user);
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody CreateUserRequest userRequest) {
+        UserEntity savedUser = userService.createUser(userRequest);
         UserResponse response = userMapper.toResponse(savedUser);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -55,8 +47,7 @@ public class AuthController {
     public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.login(), loginRequest.password())
-            );
+                    new UsernamePasswordAuthenticationToken(loginRequest.login(), loginRequest.password()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtUtils.generateJwtToken(authentication);

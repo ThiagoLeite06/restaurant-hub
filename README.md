@@ -15,7 +15,7 @@ Desenvolver um backend completo e robusto utilizando o framework Spring Boot, co
 
 - **Backend:** Spring Boot 3.5.3
 - **Linguagem:** Java 21
-- **Banco de Dados:** MySQL 8.0
+- **Banco de Dados:** PostgreSQL 16
 - **Containerização:** Docker & Docker Compose
 - **Migração:** Flyway
 - **ORM:** Spring Data JPA
@@ -25,7 +25,7 @@ Desenvolver um backend completo e robusto utilizando o framework Spring Boot, co
 
 - ☕ **Java 21** - Linguagem principal
 - 🌱 **Spring Boot 3.5.3** - Framework principal
-- 🗄️ **MySQL 8.0** - Banco de dados relacional
+- 🗄️ **PostgreSQL 16** - Banco de dados relacional
 - 🐳 **Docker** - Containerização
 - 🔄 **Flyway** - Migração de banco de dados
 - 📊 **Spring Data JPA** - Persistência de dados
@@ -54,10 +54,10 @@ cd RestaurantHub
 docker-compose up -d
 ```
 *Este comando irá:*
-- Criar e iniciar um container MySQL 8.0
-- Configurar o banco de dados `restauranthub`
-- Criar o usuário `restauranthub` com senha `restauranthub`
-- Expor a porta 3306 para conexão local
+- Criar e iniciar um container PostgreSQL 16
+- Configurar o banco de dados `restauranthubdb`
+- Criar o usuário `restaurantadmin` com senha `password123`
+- Expor a porta 5432 para conexão local
 
 3. **Compile e execute a aplicação:**
 ```bash
@@ -66,17 +66,17 @@ docker-compose up -d
 
 4. **Verifique se está funcionando:**
 - A aplicação estará disponível em: `http://localhost:8080`
-- O banco de dados estará acessível em: `localhost:3306`
+- O banco de dados estará acessível em: `localhost:5432`
 
 ### 🗄️ Configuração do Banco de Dados
 
 O projeto utiliza **Flyway** para migração automática do banco de dados. As migrações estão localizadas em `src/main/resources/db/migration/`.
 
 **Credenciais do Banco:**
-- **Host:** localhost:3306
-- **Database:** restauranthub
-- **Usuário:** restauranthub
-- **Senha:** restauranthub
+- **Host:** localhost:5432
+- **Database:** restauranthubdb
+- **Usuário:** restaurantadmin
+- **Senha:** password123
 
 ### 🔄 Comandos Úteis
 
@@ -88,10 +88,10 @@ docker-compose down
 docker-compose down -v
 
 # Ver logs do banco de dados
-docker-compose logs mysql
+docker-compose logs postgres_db
 
-# Acessar o MySQL via linha de comando
-docker exec -it restauranthub-mysql mysql -u restauranthub -p restauranthub
+# Acessar o PostgreSQL via linha de comando
+docker exec -it restauranthub-postgres psql -U restaurantadmin -d restauranthubdb
 ```
 
 ## 📝 Desenvolvimento

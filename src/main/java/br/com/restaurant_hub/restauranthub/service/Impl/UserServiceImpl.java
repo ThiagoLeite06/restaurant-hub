@@ -1,21 +1,25 @@
 package br.com.restaurant_hub.restauranthub.service.Impl;
 
+import br.com.restaurant_hub.restauranthub.controller.dto.CreateUserRequest;
+import br.com.restaurant_hub.restauranthub.controller.dto.UpdateUserRequest;
+import br.com.restaurant_hub.restauranthub.entity.UserEntity;
 import br.com.restaurant_hub.restauranthub.exception.InvalidUserDataException;
-import br.com.restaurant_hub.restauranthub.exception.UserAlreadyExistsException;
 import br.com.restaurant_hub.restauranthub.exception.UserNotFoundException;
-import br.com.restaurant_hub.restauranthub.model.User;
+import br.com.restaurant_hub.restauranthub.controller.dto.UserResponse;
 import br.com.restaurant_hub.restauranthub.repository.UserRepository;
 import br.com.restaurant_hub.restauranthub.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
-import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 @Service
-@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -27,135 +31,79 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User save(User user) {
-        if (user == null) {
-            throw new InvalidUserDataException("Usuário não pode ser nulo");
-        }
+    public UserEntity createUser(CreateUserRequest dto) {
+        var entity = new UserEntity();
+        entity.setName(dto.name());
+        entity.setEmail(dto.email());
+        entity.setPassword(passwordEncoder.encode(dto.password()));
+        entity.setAddress(dto.address());
+        entity.setLogin(dto.login());
+        entity.setUserType(dto.userType());
 
-        validateUserData(user, null);
-        user.setLastUpdated(new Date());
-
-        return userRepository.save(user);
+        return userRepository.save(entity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public User findById(Long id) {
-        if (id == null) {
-            throw new InvalidUserDataException("ID do usuário não pode ser nulo");
+    public Page<UserEntity> findAll(Integer page, Integer pageSize, String orderBy) {
+        var pageRequest = getPageRequest(page, pageSize, orderBy);
+
+        return userRepository.findAll(pageRequest);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserEntity> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    private PageRequest getPageRequest(Integer page, Integer pageSize, String orderBy) {
+        var direction = Sort.Direction.DESC;
+        if (orderBy.equalsIgnoreCase("asc")) {
+            direction = Sort.Direction.ASC;
         }
 
+        return PageRequest.of(page, pageSize, direction, "createdAt");
+    }
+
+    @Override
+    public boolean deleteById(Long id) {
+        var exists = userRepository.existsById(id);
+
+        if (exists) {
+            userRepository.deleteById(id);
+        }
+
+        return false;
+    }
+
+    @Override
+    public Optional<UserEntity> updateById(Long id, UpdateUserRequest dto) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .map(user -> {
+                    updateFieldIfPresent(dto.name(), user::setName);
+                    updateFieldIfPresent(dto.email(), user::setEmail);
+                    updateFieldIfPresent(dto.address(), user::setAddress);
+                    return userRepository.save(user);
+                });
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<User> findAll() {
-        return userRepository.findAll();
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        if (id == null) {
-            throw new InvalidUserDataException("ID do usuário não pode ser nulo");
-        }
-
-        if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException(id);
-        }
-
-        userRepository.deleteById(id);
-    }
-
-    @Override
-    public User update(Long id, User userUpdates) {
-        if (id == null) {
-            throw new InvalidUserDataException("ID do usuário não pode ser nulo");
-        }
-
-        if (userUpdates == null) {
-            throw new InvalidUserDataException("Dados para atualização não podem ser nulos");
-        }
-
-        User existingUser = findById(id);
-
-        updateName(existingUser, userUpdates);
-        updateEmail(existingUser, userUpdates, id);
-        updateLogin(existingUser, userUpdates, id);
-        updateAddress(existingUser, userUpdates);
-
-        existingUser.setLastUpdated(new Date());
-
-        return userRepository.save(existingUser);
-    }
-
-    private void updateName(User existing, User updates) {
-        if (StringUtils.hasText(updates.getName())) {
-            existing.setName(updates.getName());
-        }
-    }
-
-    private void updateEmail(User existing, User updates, Long id) {
-        if (StringUtils.hasText(updates.getEmail())) {
-            if (!updates.getEmail().equals(existing.getEmail()) &&
-                userRepository.existsByEmailAndIdNot(updates.getEmail(), id)) {
-                throw new UserAlreadyExistsException("email", updates.getEmail());
-            }
-            existing.setEmail(updates.getEmail());
-        }
-    }
-
-    private void updateLogin(User existing, User updates, Long id) {
-        if (StringUtils.hasText(updates.getLogin())) {
-            if (!updates.getLogin().equals(existing.getLogin()) &&
-                userRepository.existsByLoginAndIdNot(updates.getLogin(), id)) {
-                throw new UserAlreadyExistsException("login", updates.getLogin());
-            }
-            existing.setLogin(updates.getLogin());
-        }
-    }
-
-    private void updateAddress(User existing, User updates) {
-        if (StringUtils.hasText(updates.getAddress())) {
-            existing.setAddress(updates.getAddress());
+    private void updateFieldIfPresent(String value, Consumer<String> setter) {
+        if (StringUtils.hasText(value)) {
+            setter.accept(value);
         }
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public User findByLogin(String login) {
+    public UserResponse findByLogin(String login) {
         if (!StringUtils.hasText(login)) {
             throw new InvalidUserDataException("Login não pode ser vazio");
         }
 
-        return userRepository.findByLogin(login)
+        UserEntity user = userRepository.findByLogin(login)
                 .orElseThrow(() -> new UserNotFoundException("login", login));
-    }
 
-    @Override
-    public void validateUserData(User user, Long excludeId) {
-        if (user == null) {
-            throw new InvalidUserDataException("Usuário não pode ser nulo");
-        }
-
-        if (excludeId == null) {
-            if (StringUtils.hasText(user.getEmail()) && userRepository.existsByEmail(user.getEmail())) {
-                throw new UserAlreadyExistsException("email", user.getEmail());
-            }
-
-            if (StringUtils.hasText(user.getLogin()) && userRepository.existsByLogin(user.getLogin())) {
-                throw new UserAlreadyExistsException("login", user.getLogin());
-            }
-        } else {
-            if (StringUtils.hasText(user.getEmail()) && userRepository.existsByEmailAndIdNot(user.getEmail(), excludeId)) {
-                throw new UserAlreadyExistsException("email", user.getEmail());
-            }
-
-            if (StringUtils.hasText(user.getLogin()) && userRepository.existsByLoginAndIdNot(user.getLogin(), excludeId)) {
-                throw new UserAlreadyExistsException("login", user.getLogin());
-            }
-        }
+        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getLogin(), user.getAddress());
     }
 
     @Override
@@ -172,14 +120,15 @@ public class UserServiceImpl implements UserService {
             throw new InvalidUserDataException("Nova senha é obrigatória");
         }
 
-        User user = findById(userId);
+        UserEntity user = findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new InvalidUserDataException("Senha atual incorreta");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setLastUpdated(new Date());
+
         userRepository.save(user);
     }
 }

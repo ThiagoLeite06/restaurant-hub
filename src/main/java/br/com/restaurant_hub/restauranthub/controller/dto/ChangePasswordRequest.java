@@ -1,4 +1,4 @@
-package br.com.restaurant_hub.restauranthub.model.dto;
+package br.com.restaurant_hub.restauranthub.controller.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

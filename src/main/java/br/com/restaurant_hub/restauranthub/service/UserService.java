@@ -1,16 +1,25 @@
 package br.com.restaurant_hub.restauranthub.service;
 
-import br.com.restaurant_hub.restauranthub.model.User;
+import br.com.restaurant_hub.restauranthub.controller.dto.CreateUserRequest;
+import br.com.restaurant_hub.restauranthub.controller.dto.UpdateUserRequest;
+import br.com.restaurant_hub.restauranthub.entity.UserEntity;
+import br.com.restaurant_hub.restauranthub.controller.dto.UserResponse;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
-    User save(User user);
-    User findById(Long id);
-    List<User> findAll();
-    void deleteById(Long id);
-    User update(Long id, User user);
-    User findByLogin(String login);
-    void validateUserData(User user, Long excludeId);
+    UserEntity createUser(CreateUserRequest dto);
+
+    Optional<UserEntity> findById(Long id);
+
+    Page<UserEntity> findAll(Integer page, Integer pageSize, String orderBy);
+
+    boolean deleteById(Long id);
+
+    Optional<UserEntity> updateById(Long id, UpdateUserRequest dto);
+
+    UserResponse findByLogin(String login);
+
     void changePassword(Long userId, String currentPassword, String newPassword);
 }

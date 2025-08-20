@@ -1,46 +1,11 @@
 services:
-  spring_app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: spring_app
-    ports:
-      - "8080:8080"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/restauranthub
-      SPRING_DATASOURCE_USERNAME: restaurantadmin
-      SPRING_DATASOURCE_PASSWORD: password123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: none
-      SPRING_PROFILES_ACTIVE: prod
-    networks:
-      - backend-net
-
   postgres_db:
+    container_name: restauranthub-postgres
     image: postgres:16
     platform: linux/amd64
-    container_name: postgres_db
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     environment:
-      POSTGRES_DB: restauranthub
+      POSTGRES_DB: restauranthubdb
       POSTGRES_USER: restaurantadmin
       POSTGRES_PASSWORD: password123
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - backend-net
-
-volumes:
-  postgres_data:
-
-networks:
-  backend-net:

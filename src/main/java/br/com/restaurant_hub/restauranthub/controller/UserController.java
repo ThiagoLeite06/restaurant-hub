@@ -1,74 +1,75 @@
 package br.com.restaurant_hub.restauranthub.controller;
 
+import br.com.restaurant_hub.restauranthub.controller.dto.*;
+
 import br.com.restaurant_hub.restauranthub.mapper.UserMapper;
-import br.com.restaurant_hub.restauranthub.model.User;
-import br.com.restaurant_hub.restauranthub.model.dto.ChangePasswordRequest;
-import br.com.restaurant_hub.restauranthub.model.dto.UserRequest;
-import br.com.restaurant_hub.restauranthub.model.dto.UserResponse;
-import br.com.restaurant_hub.restauranthub.model.dto.UserUpdateRequest;
+import br.com.restaurant_hub.restauranthub.entity.UserEntity;
 import br.com.restaurant_hub.restauranthub.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
     private final UserService userService;
-    private final UserMapper userMapper;
 
     public UserController(UserService userService, UserMapper userMapper) {
         this.userService = userService;
-        this.userMapper = userMapper;
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> findAll() {
-        List<User> users = userService.findAll();
-        List<UserResponse> response = userMapper.toResponseList(users);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<UserEntity>> findAll(
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "pageSize", defaultValue = "5") Integer pageSize,
+            @RequestParam(name = "orderBy", defaultValue = "desc") String orderBy,
+            @RequestParam(name = "userType", required = false) String userType) {
+        var pageResponse = userService.findAll(page, pageSize, orderBy);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                pageResponse.getContent(),
+                new PaginationResponse(
+                        pageResponse.getNumber(),
+                        pageResponse.getSize(),
+                        pageResponse.getTotalElements(),
+                        pageResponse.getTotalPages())));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
-        User user = userService.findById(id);
-        UserResponse response = userMapper.toResponse(user);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<UserEntity> findById(@PathVariable Long id) {
+        var user = userService.findById(id);
+
+        return user.isPresent() ? ResponseEntity.ok(user.get()) : ResponseEntity.notFound().build();
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest userRequest) {
-        User user = userMapper.toEntity(userRequest);
-        User saved = userService.save(user);
-        UserResponse response = userMapper.toResponse(saved);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<Void> createUser(@Valid @RequestBody CreateUserRequest dto) {
+
+        var user = userService.createUser(dto);
+
+        return ResponseEntity.created(URI.create("/api/user/" + user.getId())).build();
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(
-            @PathVariable Long id,
-            @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
+    @PutMapping("/{id}")
+    public ResponseEntity<UserEntity> updateById(@PathVariable Long id, @RequestBody UpdateUserRequest dto) {
+        var user = userService.updateById(id, dto);
 
-        User userUpdates = userMapper.toEntityForUpdate(userUpdateRequest);
-        User updated = userService.update(id, userUpdates);
-        UserResponse response = userMapper.toResponse(updated);
-        return ResponseEntity.ok(response);
+        return user.isPresent() ? ResponseEntity.ok(user.get()) : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<UserEntity> deleteUser(@PathVariable Long id) {
+        var deleted = userService.deleteById(id);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(
             @PathVariable Long id,
             @Valid @RequestBody ChangePasswordRequest request) {
-        
+
         userService.changePassword(id, request.currentPassword(), request.newPassword());
         return ResponseEntity.noContent().build();
     }

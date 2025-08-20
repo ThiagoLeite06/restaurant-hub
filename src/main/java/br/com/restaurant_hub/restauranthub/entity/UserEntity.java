@@ -1,65 +1,56 @@
-package br.com.restaurant_hub.restauranthub.model;
+package br.com.restaurant_hub.restauranthub.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "users")
-public class User implements UserDetails {
+public class UserEntity implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
+
+    @Column(unique = true)
     private String email;
+
+    @Column(unique = true)
     private String login;
+
     private String password;
-    private Date lastUpdated;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     private String address;
+
     @Enumerated(EnumType.STRING)
     private UserType userType = UserType.CUSTOMER;
+
     private boolean enabled = true;
     private boolean accountNonExpired = true;
     private boolean accountNonLocked = true;
     private boolean credentialsNonExpired = true;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (userType == null) {
-            return List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
-        }
-        return List.of(new SimpleGrantedAuthority("ROLE_" + userType.name()));
-    }
-
-    public User() {}
-
-    public User(String name,
-                String email,
-                String login,
-                String password,
-                Date lastUpdated,
-                String address) {
-        this.name = name;
-        this.email = email;
-        this.login = login;
-        this.password = password;
-        this.lastUpdated = lastUpdated;
-        this.address = address;
-    }
+    public UserEntity() {}
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -119,12 +110,20 @@ public class User implements UserDetails {
         this.password = password;
     }
 
-    public Date getLastUpdated() {
-        return lastUpdated;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setLastUpdated(Date lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public String getAddress() {
@@ -141,6 +140,14 @@ public class User implements UserDetails {
 
     public void setUserType(UserType userType) {
         this.userType = userType;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (userType == null) {
+            return List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+        }
+        return List.of(new SimpleGrantedAuthority("ROLE_" + userType.name()));
     }
 
 }

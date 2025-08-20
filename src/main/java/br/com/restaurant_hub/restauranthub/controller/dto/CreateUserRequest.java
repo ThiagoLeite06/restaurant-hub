@@ -1,11 +1,13 @@
-package br.com.restaurant_hub.restauranthub.model.dto;
+package br.com.restaurant_hub.restauranthub.controller.dto;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
-import br.com.restaurant_hub.restauranthub.model.UserType;
+import br.com.restaurant_hub.restauranthub.entity.UserType;
 
-public record UserRequest(
+public record CreateUserRequest(
         @NotBlank(message = "Nome é obrigatório")
         @Size(min = 2, max = 100, message = "Nome deve ter entre 2 e 100 caracteres")
         String name,
@@ -24,6 +26,6 @@ public record UserRequest(
 
         @Size(max = 255, message = "Endereço deve ter no máximo 255 caracteres")
         String address,
-        
-        UserType userType
+
+        @Enumerated(EnumType.STRING) UserType userType
 ) {}
