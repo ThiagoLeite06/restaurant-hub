@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
             userRepository.deleteById(id);
         }
 
-        return false;
+        return exists;
     }
 
     @Override
