@@ -10,14 +10,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 public class UserEntity implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     private String name;
 
@@ -39,17 +40,19 @@ public class UserEntity implements UserDetails {
 
     private String address;
 
-    @Enumerated(EnumType.STRING)
-    private UserType userType = UserType.CUSTOMER;
+    @ManyToOne
+    @JoinColumn(name = "user_type_id", referencedColumnName = "id")
+    private UserTypeEntity userTypeEntity;
 
     private boolean enabled = true;
     private boolean accountNonExpired = true;
     private boolean accountNonLocked = true;
     private boolean credentialsNonExpired = true;
 
-    public UserEntity() {}
+    public UserEntity() {
+    }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -134,20 +137,20 @@ public class UserEntity implements UserDetails {
         this.address = address;
     }
 
-    public UserType getUserType() {
-        return userType;
+    public UserTypeEntity getUserTypeEntity() {
+        return userTypeEntity;
     }
 
-    public void setUserType(UserType userType) {
-        this.userType = userType;
+    public void setUserTypeEntity(UserTypeEntity userTypeEntity) {
+        this.userTypeEntity = userTypeEntity;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (userType == null) {
+        if (userTypeEntity == null || userTypeEntity.getName() == null) {
             return List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
         }
-        return List.of(new SimpleGrantedAuthority("ROLE_" + userType.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + userTypeEntity.getName().toUpperCase()));
     }
 
 }
