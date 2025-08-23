@@ -8,7 +8,8 @@ public record UserResponse(
         String email,
         String login,
         String address,
-        String userType,
+        String userTypeId,
+        String userTypeName,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         Boolean enabled

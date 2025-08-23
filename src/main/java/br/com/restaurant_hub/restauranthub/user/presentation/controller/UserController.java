@@ -1,7 +1,7 @@
 package br.com.restaurant_hub.restauranthub.user.presentation.controller;
 
-import br.com.restaurant_hub.restauranthub.user.presentation.dto.ApiResponse;
-import br.com.restaurant_hub.restauranthub.user.presentation.dto.PaginationResponse;
+import br.com.restaurant_hub.restauranthub.common.dto.ApiResponse;
+import br.com.restaurant_hub.restauranthub.common.dto.PaginationResponse;
 import br.com.restaurant_hub.restauranthub.user.application.dto.*;
 import br.com.restaurant_hub.restauranthub.user.application.usecase.*;
 import jakarta.validation.Valid;

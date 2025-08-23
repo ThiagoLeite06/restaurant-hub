@@ -1,5 +1,6 @@
 package br.com.restaurant_hub.restauranthub.user.domain.entity;
 
+import br.com.restaurant_hub.restauranthub.usertype.domain.entity.UserType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -35,9 +36,9 @@ public class User implements UserDetails {
     @Column(length = 500)
     private String address;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "user_type", nullable = false)
-    private UserType userType = UserType.CUSTOMER;
+    @ManyToOne()
+    @JoinColumn(name = "user_type_id", nullable = false)
+    private UserType userType;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -111,12 +112,8 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (userType == null) {
-            return List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+            return List.of(new SimpleGrantedAuthority("ROLE_CLIENT"));
         }
-        return List.of(new SimpleGrantedAuthority("ROLE_" + userType.name()));
-    }
-    
-    public enum UserType {
-        OWNER, CUSTOMER
+        return List.of(new SimpleGrantedAuthority("ROLE_" + userType.getName()));
     }
 }

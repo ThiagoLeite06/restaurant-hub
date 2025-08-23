@@ -5,6 +5,8 @@ import br.com.restaurant_hub.restauranthub.exception.UserNotFoundException;
 import br.com.restaurant_hub.restauranthub.user.application.dto.*;
 import br.com.restaurant_hub.restauranthub.user.domain.entity.User;
 import br.com.restaurant_hub.restauranthub.user.infrastructure.repository.UserRepository;
+import br.com.restaurant_hub.restauranthub.usertype.application.service.UserTypeService;
+import br.com.restaurant_hub.restauranthub.usertype.domain.entity.UserType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,15 +25,16 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserTypeService userTypeService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserTypeService userTypeService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userTypeService = userTypeService;
     }
 
     @Override
     public User createUser(CreateUserRequest request) {
-        // Validar se usuário já existe
         if (userRepository.existsByEmail(request.email())) {
             throw new InvalidUserDataException("Email já está em uso");
         }
@@ -47,8 +50,11 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setAddress(request.address());
         
-        if (StringUtils.hasText(request.userType())) {
-            user.setUserType(User.UserType.valueOf(request.userType().toUpperCase()));
+        if (StringUtils.hasText(request.userTypeId())) {
+            Long userTypeId = Long.parseLong(request.userTypeId());
+            UserType userType = userTypeService.findById(userTypeId)
+                    .orElseThrow(() -> new InvalidUserDataException("Tipo de usuário não encontrado"));
+            user.setUserType(userType);
         }
 
         return userRepository.save(user);
@@ -145,7 +151,8 @@ public class UserServiceImpl implements UserService {
                 user.getEmail(),
                 user.getLogin(),
                 user.getAddress(),
-                user.getUserType().name(),
+                user.getUserType() != null ? user.getUserType().getId().toString() : null,
+                user.getUserType() != null ? user.getUserType().getName() : null,
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
                 user.isEnabled()

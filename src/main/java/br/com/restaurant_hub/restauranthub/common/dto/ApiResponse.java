@@ -1,4 +1,4 @@
-package br.com.restaurant_hub.restauranthub.user.presentation.dto;
+package br.com.restaurant_hub.restauranthub.common.dto;
 
 import java.util.List;
 

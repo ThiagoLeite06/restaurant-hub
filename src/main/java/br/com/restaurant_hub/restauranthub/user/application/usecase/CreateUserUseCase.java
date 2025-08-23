@@ -37,7 +37,8 @@ public class CreateUserUseCase {
                 user.getEmail(),
                 user.getLogin(),
                 user.getAddress(),
-                user.getUserType().name(),
+                user.getUserType() != null ? user.getUserType().getId().toString() : null,
+                user.getUserType() != null ? user.getUserType().getName() : null,
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
                 user.isEnabled()
