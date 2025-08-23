@@ -1,10 +1,10 @@
 package br.com.restaurant_hub.restauranthub.usertype.domain.entity;
 
+import br.com.restaurant_hub.restauranthub.user.domain.entity.User;
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "user_types")
@@ -19,6 +19,9 @@ public class UserType {
     
     @Column(length = 500)
     private String description;
+
+    @OneToMany(mappedBy = "userType", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<User> users = new ArrayList<>();
 
     public UserType() {}
     
