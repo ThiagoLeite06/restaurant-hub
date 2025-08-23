@@ -8,7 +8,7 @@ import java.util.List;
 
 public record ErrorResponse(
         String message,
-        int status,
+        Integer status,
         String error,
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime timestamp,

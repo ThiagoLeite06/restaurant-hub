@@ -1,13 +1,10 @@
-package br.com.restaurant_hub.restauranthub.service.Impl;
+package br.com.restaurant_hub.restauranthub.user.application.service;
 
-import br.com.restaurant_hub.restauranthub.controller.dto.CreateUserRequest;
-import br.com.restaurant_hub.restauranthub.controller.dto.UpdateUserRequest;
-import br.com.restaurant_hub.restauranthub.entity.UserEntity;
 import br.com.restaurant_hub.restauranthub.exception.InvalidUserDataException;
 import br.com.restaurant_hub.restauranthub.exception.UserNotFoundException;
-import br.com.restaurant_hub.restauranthub.controller.dto.UserResponse;
-import br.com.restaurant_hub.restauranthub.repository.UserRepository;
-import br.com.restaurant_hub.restauranthub.service.UserService;
+import br.com.restaurant_hub.restauranthub.user.application.dto.*;
+import br.com.restaurant_hub.restauranthub.user.domain.entity.User;
+import br.com.restaurant_hub.restauranthub.user.infrastructure.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -17,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -31,59 +30,66 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserEntity createUser(CreateUserRequest dto) {
-        var entity = new UserEntity();
-        entity.setName(dto.name());
-        entity.setEmail(dto.email());
-        entity.setPassword(passwordEncoder.encode(dto.password()));
-        entity.setAddress(dto.address());
-        entity.setLogin(dto.login());
-        entity.setUserType(dto.userType());
+    public User createUser(CreateUserRequest request) {
+        // Validar se usuário já existe
+        if (userRepository.existsByEmail(request.email())) {
+            throw new InvalidUserDataException("Email já está em uso");
+        }
+        
+        if (userRepository.existsByLogin(request.login())) {
+            throw new InvalidUserDataException("Login já está em uso");
+        }
+        
+        User user = new User();
+        user.setName(request.name());
+        user.setEmail(request.email());
+        user.setLogin(request.login());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setAddress(request.address());
+        
+        if (StringUtils.hasText(request.userType())) {
+            user.setUserType(User.UserType.valueOf(request.userType().toUpperCase()));
+        }
 
-        return userRepository.save(entity);
+        return userRepository.save(user);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserEntity> findAll(Integer page, Integer pageSize, String orderBy) {
-        var pageRequest = getPageRequest(page, pageSize, orderBy);
-
+    public Page<User> findAll(Integer page, Integer pageSize, String orderBy) {
+        PageRequest pageRequest = getPageRequest(page, pageSize, orderBy);
         return userRepository.findAll(pageRequest);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<UserEntity> findById(Long id) {
+    public Optional<User> findById(UUID id) {
         return userRepository.findById(id);
     }
 
     private PageRequest getPageRequest(Integer page, Integer pageSize, String orderBy) {
-        var direction = Sort.Direction.DESC;
+        Sort.Direction direction = Sort.Direction.DESC;
         if (orderBy.equalsIgnoreCase("asc")) {
             direction = Sort.Direction.ASC;
         }
-
         return PageRequest.of(page, pageSize, direction, "createdAt");
     }
 
     @Override
-    public boolean deleteById(Long id) {
-        var exists = userRepository.existsById(id);
-
+    public Boolean deleteById(UUID id) {
+        Boolean exists = userRepository.existsById(id);
         if (exists) {
             userRepository.deleteById(id);
         }
-
         return exists;
     }
 
     @Override
-    public Optional<UserEntity> updateById(Long id, UpdateUserRequest dto) {
+    public Optional<User> updateById(UUID id, UpdateUserRequest request) {
         return userRepository.findById(id)
                 .map(user -> {
-                    updateFieldIfPresent(dto.name(), user::setName);
-                    updateFieldIfPresent(dto.email(), user::setEmail);
-                    updateFieldIfPresent(dto.address(), user::setAddress);
+                    updateFieldIfPresent(request.name(), user::setName);
+                    updateFieldIfPresent(request.address(), user::setAddress);
                     return userRepository.save(user);
                 });
     }
@@ -95,19 +101,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponse findByLogin(String login) {
         if (!StringUtils.hasText(login)) {
             throw new InvalidUserDataException("Login não pode ser vazio");
         }
 
-        UserEntity user = userRepository.findByLogin(login)
+        User user = userRepository.findByLogin(login)
                 .orElseThrow(() -> new UserNotFoundException("login", login));
 
-        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getLogin(), user.getAddress());
+        return mapToResponse(user);
     }
 
     @Override
-    public void changePassword(Long userId, String currentPassword, String newPassword) {
+    public void changePassword(UUID userId, String currentPassword, String newPassword) {
         if (userId == null) {
             throw new InvalidUserDataException("ID do usuário não pode ser nulo");
         }
@@ -120,7 +127,7 @@ public class UserServiceImpl implements UserService {
             throw new InvalidUserDataException("Nova senha é obrigatória");
         }
 
-        UserEntity user = findById(userId)
+        User user = findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
@@ -128,7 +135,20 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
-
         userRepository.save(user);
+    }
+    
+    private UserResponse mapToResponse(User user) {
+        return new UserResponse(
+                user.getId().toString(),
+                user.getName(),
+                user.getEmail(),
+                user.getLogin(),
+                user.getAddress(),
+                user.getUserType().name(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                user.isEnabled()
+        );
     }
 }

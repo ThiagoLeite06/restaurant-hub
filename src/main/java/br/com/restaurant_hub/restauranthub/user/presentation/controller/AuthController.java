@@ -1,11 +1,9 @@
-package br.com.restaurant_hub.restauranthub.controller;
+package br.com.restaurant_hub.restauranthub.user.presentation.controller;
 
-import br.com.restaurant_hub.restauranthub.mapper.UserMapper;
-import br.com.restaurant_hub.restauranthub.entity.UserEntity;
-import br.com.restaurant_hub.restauranthub.controller.dto.CreateUserRequest;
-import br.com.restaurant_hub.restauranthub.controller.dto.UserResponse;
 import br.com.restaurant_hub.restauranthub.security.JwtUtils;
-import br.com.restaurant_hub.restauranthub.service.UserService;
+import br.com.restaurant_hub.restauranthub.user.application.dto.CreateUserRequest;
+import br.com.restaurant_hub.restauranthub.user.application.dto.UserResponse;
+import br.com.restaurant_hub.restauranthub.user.application.usecase.CreateUserUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,33 +11,27 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
+    private final CreateUserUseCase createUserUseCase;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
-    private final UserMapper userMapper;
 
-    public AuthController(UserService userService, PasswordEncoder passwordEncoder,
-            AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserMapper userMapper) {
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
+    public AuthController(CreateUserUseCase createUserUseCase,
+                         AuthenticationManager authenticationManager, 
+                         JwtUtils jwtUtils) {
+        this.createUserUseCase = createUserUseCase;
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
-        this.userMapper = userMapper;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody CreateUserRequest userRequest) {
-        UserEntity savedUser = userService.createUser(userRequest);
-        UserResponse response = userMapper.toResponse(savedUser);
-
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody CreateUserRequest request) {
+        UserResponse response = createUserUseCase.execute(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -58,10 +50,8 @@ public class AuthController {
         }
     }
 
-    public record LoginRequest(String login, String password) {
-    }
+    // DTOs for API
+    public record LoginRequest(String login, String password) {}
 
-    public record JwtResponse(String token, String type, String username) {
-    }
-
+    public record JwtResponse(String token, String type, String username) {}
 }

@@ -17,7 +17,7 @@ public class JwtUtils {
     private String jwtSecret;
 
     @Value("${app.jwtExpirationMs:86400000}")
-    private int jwtExpirationMs;
+    private Integer jwtExpirationMs;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
@@ -46,7 +46,7 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    public boolean validateJwtToken(String authToken) {
+    public Boolean validateJwtToken(String authToken) {
         try {
             Jwts.parser()
                 .verifyWith(getSigningKey())

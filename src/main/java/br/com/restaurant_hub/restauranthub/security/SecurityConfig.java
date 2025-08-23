@@ -1,6 +1,6 @@
 package br.com.restaurant_hub.restauranthub.security;
 
-import br.com.restaurant_hub.restauranthub.service.CustomUserDetailService;
+import br.com.restaurant_hub.restauranthub.security.CustomUserDetailService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

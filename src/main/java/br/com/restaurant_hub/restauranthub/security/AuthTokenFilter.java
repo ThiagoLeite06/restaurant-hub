@@ -1,6 +1,6 @@
 package br.com.restaurant_hub.restauranthub.security;
 
-import br.com.restaurant_hub.restauranthub.service.CustomUserDetailService;
+import br.com.restaurant_hub.restauranthub.security.CustomUserDetailService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,7 +1,7 @@
-package br.com.restaurant_hub.restauranthub.service;
+package br.com.restaurant_hub.restauranthub.security;
 
-import br.com.restaurant_hub.restauranthub.entity.UserEntity;
-import br.com.restaurant_hub.restauranthub.repository.UserRepository;
+import br.com.restaurant_hub.restauranthub.user.domain.entity.User;
+import br.com.restaurant_hub.restauranthub.user.infrastructure.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,9 +17,10 @@ public class CustomUserDetailService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserEntity user = userRepository.findByLogin(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
-        return user;
+    public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
+        User user = userRepository.findByLogin(login)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + login));
+
+        return user; // User já implementa UserDetails
     }
 }
