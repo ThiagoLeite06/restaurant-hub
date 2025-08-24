@@ -1,5 +1,6 @@
 package br.com.restaurant_hub.restauranthub.user.domain.entity;
 
+import br.com.restaurant_hub.restauranthub.restaurant.domain.entity.Restaurant;
 import br.com.restaurant_hub.restauranthub.usertype.domain.entity.UserType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;

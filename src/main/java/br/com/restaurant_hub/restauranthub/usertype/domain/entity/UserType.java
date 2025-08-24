@@ -20,7 +20,7 @@ public class UserType {
     @Column(length = 500)
     private String description;
 
-    @OneToMany(mappedBy = "userType", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "userType", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<User> users = new ArrayList<>();
 
     public UserType() {}

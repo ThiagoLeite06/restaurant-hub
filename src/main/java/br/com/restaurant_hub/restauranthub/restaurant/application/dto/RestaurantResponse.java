@@ -11,6 +11,8 @@ public record RestaurantResponse(
         CuisineType cuisineType,
         String cuisineTypeName,
         String openingHours,
+        String ownerId,
+        String ownerName,
         Boolean active,
         LocalDateTime createdAt,
         LocalDateTime updatedAt

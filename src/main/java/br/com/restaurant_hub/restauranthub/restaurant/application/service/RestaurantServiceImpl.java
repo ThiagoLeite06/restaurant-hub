@@ -5,6 +5,8 @@ import br.com.restaurant_hub.restauranthub.restaurant.application.dto.*;
 import br.com.restaurant_hub.restauranthub.restaurant.domain.entity.Restaurant;
 import br.com.restaurant_hub.restauranthub.restaurant.domain.enums.CuisineType;
 import br.com.restaurant_hub.restauranthub.restaurant.infrastructure.repository.RestaurantRepository;
+import br.com.restaurant_hub.restauranthub.user.domain.entity.User;
+import br.com.restaurant_hub.restauranthub.user.infrastructure.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -20,9 +22,11 @@ import java.util.function.Consumer;
 public class RestaurantServiceImpl implements RestaurantService {
     
     private final RestaurantRepository restaurantRepository;
+    private final UserRepository userRepository;
     
-    public RestaurantServiceImpl(RestaurantRepository restaurantRepository) {
+    public RestaurantServiceImpl(RestaurantRepository restaurantRepository, UserRepository userRepository) {
         this.restaurantRepository = restaurantRepository;
+        this.userRepository = userRepository;
     }
     
     @Override
@@ -31,11 +35,25 @@ public class RestaurantServiceImpl implements RestaurantService {
             throw new InvalidUserDataException("Nome do restaurante já está em uso");
         }
         
+        // Validar se o owner existe e é do tipo OWNER
+        User owner = userRepository.findById(request.ownerId())
+                .orElseThrow(() -> new InvalidUserDataException("Usuário proprietário não encontrado"));
+        
+        if (!"OWNER".equals(owner.getUserType().getName())) {
+            throw new InvalidUserDataException("Usuário deve ser do tipo OWNER para possuir um restaurante");
+        }
+        
+        // Verificar se o owner já possui um restaurante
+        if (restaurantRepository.existsByOwnerId(request.ownerId())) {
+            throw new InvalidUserDataException("Usuário já possui um restaurante cadastrado");
+        }
+        
         Restaurant restaurant = new Restaurant();
         restaurant.setName(request.name());
         restaurant.setAddress(request.address());
         restaurant.setCuisineType(request.cuisineType());
         restaurant.setOpeningHours(request.openingHours());
+        restaurant.setOwner(owner);
         
         return restaurantRepository.save(restaurant);
     }
@@ -63,6 +81,25 @@ public class RestaurantServiceImpl implements RestaurantService {
                         restaurant.setCuisineType(request.cuisineType());
                     }
                     updateFieldIfPresent(request.openingHours(), restaurant::setOpeningHours);
+                    
+                    // Atualizar owner se fornecido
+                    if (request.ownerId() != null) {
+                        User newOwner = userRepository.findById(request.ownerId())
+                                .orElseThrow(() -> new InvalidUserDataException("Usuário proprietário não encontrado"));
+                        
+                        if (!"OWNER".equals(newOwner.getUserType().getName())) {
+                            throw new InvalidUserDataException("Usuário deve ser do tipo OWNER para possuir um restaurante");
+                        }
+                        
+                        // Verificar se o novo owner já possui outro restaurante
+                        if (!newOwner.getId().equals(restaurant.getOwner().getId()) && 
+                            restaurantRepository.existsByOwnerId(request.ownerId())) {
+                            throw new InvalidUserDataException("Usuário já possui um restaurante cadastrado");
+                        }
+                        
+                        restaurant.setOwner(newOwner);
+                    }
+                    
                     return restaurantRepository.save(restaurant);
                 });
     }

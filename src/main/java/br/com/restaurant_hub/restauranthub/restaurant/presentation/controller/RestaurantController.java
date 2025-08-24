@@ -83,6 +83,8 @@ public class RestaurantController {
                 restaurant.getCuisineType(),
                 restaurant.getCuisineType().getDisplayName(),
                 restaurant.getOpeningHours(),
+                restaurant.getOwner().getId().toString(),
+                restaurant.getOwner().getName(),
                 restaurant.getActive(),
                 restaurant.getCreatedAt(),
                 restaurant.getUpdatedAt()

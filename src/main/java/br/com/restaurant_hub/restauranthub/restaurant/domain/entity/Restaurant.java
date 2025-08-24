@@ -1,11 +1,13 @@
 package br.com.restaurant_hub.restauranthub.restaurant.domain.entity;
 
 import br.com.restaurant_hub.restauranthub.restaurant.domain.enums.CuisineType;
+import br.com.restaurant_hub.restauranthub.user.domain.entity.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "restaurants")
@@ -27,6 +29,10 @@ public class Restaurant {
     
     @Column(name = "opening_hours", length = 100)
     private String openingHours;
+    
+    @OneToOne
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
     
     @Column(nullable = false)
     private Boolean active = true;
@@ -62,6 +68,9 @@ public class Restaurant {
     
     public String getOpeningHours() { return openingHours; }
     public void setOpeningHours(String openingHours) { this.openingHours = openingHours; }
+    
+    public User getOwner() { return owner; }
+    public void setOwner(User owner) { this.owner = owner; }
     
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }

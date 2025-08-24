@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
@@ -16,4 +17,6 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     List<Restaurant> findByCuisineType(CuisineType cuisineType);
     Page<Restaurant> findByActiveTrue(Pageable pageable);
     Boolean existsByName(String name);
+    Boolean existsByOwnerId(UUID ownerId);
+    Optional<Restaurant> findByOwnerId(UUID ownerId);
 }
