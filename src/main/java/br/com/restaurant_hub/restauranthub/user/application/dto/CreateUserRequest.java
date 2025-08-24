@@ -23,7 +23,8 @@ public record CreateUserRequest(
         
         @Size(max = 500, message = "Endereço deve ter no máximo 500 caracteres")
         String address,
-        
+
+        @NotBlank(message = "Tipo de usuário é obrigatório")
         String userTypeId
 ) {
 }

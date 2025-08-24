@@ -20,7 +20,7 @@ public class UserType {
     @Column(length = 500)
     private String description;
 
-    @OneToMany(mappedBy = "userType", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "userType", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<User> users = new ArrayList<>();
 
     public UserType() {}
@@ -33,15 +33,17 @@ public class UserType {
         this.name = name;
         this.description = description;
     }
-    
-    // Getters and Setters
+
     public Long getId() { return id; }
+
     public void setId(Long id) { this.id = id; }
     
     public String getName() { return name; }
+
     public void setName(String name) { this.name = name; }
     
     public String getDescription() { return description; }
+
     public void setDescription(String description) { this.description = description; }
 
 }
