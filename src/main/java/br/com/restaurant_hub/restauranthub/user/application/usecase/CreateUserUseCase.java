@@ -18,15 +18,8 @@ public class CreateUserUseCase {
     }
     
     public UserResponse execute(CreateUserRequest request) {
-        // Criar usuário através do Service
         User user = userService.createUser(request);
-        
-        // Aqui poderia ter lógicas adicionais como:
-        // - Envio de email de boas-vindas
-        // - Log de auditoria
-        // - Notificações
-        
-        // Converter para Response
+
         return mapToResponse(user);
     }
     

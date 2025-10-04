@@ -3,7 +3,6 @@ package br.com.restaurant_hub.restauranthub.restaurant.application.service;
 import br.com.restaurant_hub.restauranthub.exception.InvalidUserDataException;
 import br.com.restaurant_hub.restauranthub.restaurant.application.dto.*;
 import br.com.restaurant_hub.restauranthub.restaurant.domain.entity.Restaurant;
-import br.com.restaurant_hub.restauranthub.restaurant.domain.enums.CuisineType;
 import br.com.restaurant_hub.restauranthub.restaurant.infrastructure.repository.RestaurantRepository;
 import br.com.restaurant_hub.restauranthub.user.domain.entity.User;
 import br.com.restaurant_hub.restauranthub.user.infrastructure.repository.UserRepository;

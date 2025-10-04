@@ -4,6 +4,7 @@ import br.com.restaurant_hub.restauranthub.security.JwtUtils;
 import br.com.restaurant_hub.restauranthub.user.application.dto.CreateUserRequest;
 import br.com.restaurant_hub.restauranthub.user.application.dto.UserResponse;
 import br.com.restaurant_hub.restauranthub.user.application.usecase.CreateUserUseCase;
+
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

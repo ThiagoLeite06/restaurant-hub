@@ -1,0 +1,124 @@
+package br.com.restaurant_hub.restauranthub.user.presentation.controller;
+
+import br.com.restaurant_hub.restauranthub.common.dto.ApiResponse;
+import br.com.restaurant_hub.restauranthub.common.dto.PaginationResponse;
+import br.com.restaurant_hub.restauranthub.user.application.dto.*;
+import br.com.restaurant_hub.restauranthub.user.application.usecase.*;
+
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/user")
+public class UserController {
+
+    private final CreateUserUseCase createUserUseCase;
+    private final FindUserByIdUseCase findUserByIdUseCase;
+    private final FindAllUsersUseCase findAllUsersUseCase;
+    private final UpdateUserUseCase updateUserUseCase;
+    private final ChangePasswordUseCase changePasswordUseCase;
+    private final DeleteUserUseCase deleteUserUseCase;
+
+    public UserController(CreateUserUseCase createUserUseCase,
+            FindUserByIdUseCase findUserByIdUseCase,
+            FindAllUsersUseCase findAllUsersUseCase,
+            UpdateUserUseCase updateUserUseCase,
+            ChangePasswordUseCase changePasswordUseCase,
+            DeleteUserUseCase deleteUserUseCase) {
+        this.createUserUseCase = createUserUseCase;
+        this.findUserByIdUseCase = findUserByIdUseCase;
+        this.findAllUsersUseCase = findAllUsersUseCase;
+        this.updateUserUseCase = updateUserUseCase;
+        this.changePasswordUseCase = changePasswordUseCase;
+        this.deleteUserUseCase = deleteUserUseCase;
+    }
+
+    @GetMapping
+    @Operation(summary = "Listar usuários", description = "Retorna uma lista paginada de usuários do sistema")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    public ResponseEntity<ApiResponse<UserResponse>> findAll(
+            @Parameter(description = "Número da página (inicia em 0)") @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @Parameter(description = "Tamanho da página") @RequestParam(name = "pageSize", defaultValue = "5") Integer pageSize,
+            @Parameter(description = "Ordenação (asc ou desc)") @RequestParam(name = "orderBy", defaultValue = "desc") String orderBy) {
+
+        var pageResponse = findAllUsersUseCase.execute(page, pageSize, orderBy);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                pageResponse.getContent(),
+                new PaginationResponse(
+                        pageResponse.getNumber(),
+                        pageResponse.getSize(),
+                        pageResponse.getTotalElements(),
+                        pageResponse.getTotalPages())));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar usuário por ID", description = "Retorna um usuário específico pelo seu ID")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Usuário encontrado", content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<UserResponse> findById(
+            @Parameter(description = "ID do usuário") @PathVariable String id) {
+        var user = findUserByIdUseCase.execute(UUID.fromString(id));
+        return user.isPresent() ? ResponseEntity.ok(user.get()) : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping
+    @Operation(summary = "Criar usuário", description = "Cria um novo usuário no sistema")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Email ou login já existem")
+    })
+    public ResponseEntity<Void> createUser(
+            @Parameter(description = "Dados do usuário a ser criado") @Valid @RequestBody CreateUserRequest request) {
+        UserResponse user = createUserUseCase.execute(request);
+        return ResponseEntity.created(URI.create("/api/user/" + user.id())).build();
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso", content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<UserResponse> updateById(
+            @Parameter(description = "ID do usuário") @PathVariable UUID id,
+            @Parameter(description = "Dados para atualização") @RequestBody UpdateUserRequest request) {
+        var user = updateUserUseCase.execute(id, request);
+        return user.isPresent() ? ResponseEntity.ok(user.get()) : ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Deletar usuário", description = "Remove um usuário do sistema")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Usuário deletado com sucesso"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<Void> deleteUser(
+            @Parameter(description = "ID do usuário") @PathVariable String id) {
+        Boolean deleted = deleteUserUseCase.execute(UUID.fromString(id));
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @PutMapping("/{id}/password")
+    @Operation(summary = "Alterar senha", description = "Altera a senha de um usuário")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Senha alterada com sucesso"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<Void> changePassword(
+            @Parameter(description = "ID do usuário") @PathVariable UUID id,
+            @Parameter(description = "Dados para alteração de senha") @Valid @RequestBody ChangePasswordRequest request) {
+        changePasswordUseCase.execute(id, request);
+        return ResponseEntity.noContent().build();
+    }
+}

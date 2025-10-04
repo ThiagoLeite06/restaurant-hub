@@ -1,6 +1,5 @@
 package br.com.restaurant_hub.restauranthub.security;
 
-import br.com.restaurant_hub.restauranthub.security.CustomUserDetailService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +32,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                    .requestMatchers("/api-docs", "/swagger-ui").permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

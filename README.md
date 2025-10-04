@@ -67,6 +67,8 @@ docker-compose up -d
 4. **Verifique se está funcionando:**
 - A aplicação estará disponível em: `http://localhost:8080`
 - O banco de dados estará acessível em: `localhost:5432`
+- **Documentação da API (Swagger):** `http://localhost:8080/swagger-ui.html`
+- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
 
 ### 🗄️ Configuração do Banco de Dados
 
@@ -107,6 +109,13 @@ docker exec -it restauranthub-postgres psql -U restaurantadmin -d restauranthubd
 
 # Executar a aplicação
 ./mvnw spring-boot:run
+
+# Executar testes com cobertura
+./run-tests.sh
+
+# Ou executar testes manualmente
+./mvnw test
+./mvnw jacoco:report
 ```
 
 ### 🗂️ Estrutura do Projeto
@@ -149,13 +158,35 @@ RestaurantHub/
 GET    /api/user           # Listar usuários
 GET    /api/user/{id}      # Buscar usuário por ID
 POST   /api/user           # Criar usuário
-PATCH  /api/user/{id}      # Atualizar usuário
+PUT    /api/user/{id}      # Atualizar usuário
 DELETE /api/user/{id}      # Deletar usuário
 PUT    /api/user/{id}/password  # Trocar senha
 
 # Autenticação
 POST   /api/auth/register  # Registrar usuário
 POST   /api/auth/login     # Login do usuário
+
+# Tipos de Usuário
+GET    /api/user-type      # Listar tipos de usuário
+GET    /api/user-type/{id} # Buscar tipo por ID
+POST   /api/user-type      # Criar tipo de usuário
+PUT    /api/user-type/{id} # Atualizar tipo
+DELETE /api/user-type/{id} # Deletar tipo
+
+# Restaurantes
+GET    /api/restaurants    # Listar restaurantes
+GET    /api/restaurants/{id} # Buscar restaurante por ID
+POST   /api/restaurants    # Criar restaurante (apenas OWNER)
+PUT    /api/restaurants/{id} # Atualizar restaurante
+DELETE /api/restaurants/{id} # Deletar restaurante
+
+# Itens do Cardápio
+GET    /api/menu-items     # Listar itens do cardápio
+GET    /api/menu-items/{id} # Buscar item por ID
+POST   /api/menu-items     # Criar item do cardápio
+PUT    /api/menu-items/{id} # Atualizar item
+DELETE /api/menu-items/{id} # Deletar item
+GET    /api/menu-items/restaurant/{id} # Itens por restaurante
 ```
 
 ### 🔜 Próximas Fases
@@ -165,9 +196,13 @@ POST   /api/auth/login     # Login do usuário
 - **Fase 5:** Dashboard administrativo e relatórios
 
 ### 📋 Status Atual
-- **Progresso:** 80% implementado
+- **Progresso:** 95% implementado
 - **Módulo de Usuários:** ✅ 100% Completo (com troca de senha)
+- **Módulo de Restaurantes:** ✅ 100% Completo
+- **Módulo de Cardápios:** ✅ 100% Completo
 - **Sistema de Segurança:** ✅ 95% Implementado
+- **Documentação API:** ✅ 100% Implementado (Swagger)
+- **Testes Automatizados:** ✅ 80%+ Cobertura
 - **Banco de Dados:** ✅ 100% Funcional
 
 ## 🤝 Contribuindo
@@ -181,3 +216,92 @@ POST   /api/auth/login     # Login do usuário
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 📚 Documentação da API
+
+### Swagger UI
+A documentação completa da API está disponível através do Swagger UI:
+- **URL:** `http://localhost:8080/swagger-ui.html`
+- **Recursos:** Teste interativo de todos os endpoints
+- **Autenticação:** Suporte a JWT Bearer Token
+
+### Funcionalidades Documentadas
+- ✅ Todos os endpoints com descrições detalhadas
+- ✅ Exemplos de request e response
+- ✅ Códigos de status HTTP
+- ✅ Modelos de dados (schemas)
+- ✅ Parâmetros obrigatórios e opcionais
+- ✅ Validações e regras de negócio
+
+## 🧪 Testes Automatizados
+
+### Cobertura de Testes
+- **Meta:** 80% de cobertura mínima
+- **Tipos:** Testes unitários e de integração
+- **Framework:** JUnit 5 + Mockito
+- **Relatórios:** JaCoCo
+
+### Executar Testes
+```bash
+# Executar todos os testes
+./mvnw test
+
+# Executar testes com relatório de cobertura
+./mvnw test jacoco:report
+
+# Verificar cobertura mínima
+./mvnw jacoco:check
+
+# Script automatizado
+./run-tests.sh
+```
+
+### Visualizar Relatório
+Após executar os testes, o relatório estará disponível em:
+`target/site/jacoco/index.html`
+
+## 🔐 Autenticação e Autorização
+
+### Fluxo de Autenticação
+1. **Registro:** `POST /api/auth/register`
+2. **Login:** `POST /api/auth/login` → Retorna JWT token
+3. **Uso:** Incluir header `Authorization: Bearer {token}`
+
+### Tipos de Usuário
+- **CLIENT:** Cliente do sistema
+- **OWNER:** Proprietário de restaurante (pode criar restaurantes)
+- **SYSTEM_ADMIN:** Administrador do sistema
+
+### Regras de Negócio
+- ✅ Apenas usuários OWNER podem criar restaurantes
+- ✅ Um OWNER pode ter apenas um restaurante
+- ✅ Validação de email e login únicos
+- ✅ Senhas criptografadas com BCrypt
+
+## 📊 Métricas e Qualidade
+
+### Cobertura de Código
+- **Testes Unitários:** Use Cases, Services, Repositories
+- **Testes de Integração:** Controllers, APIs completas
+- **Validações:** Regras de negócio e exceções
+
+### Arquitetura
+- **Clean Architecture:** Separação clara de responsabilidades
+- **Hexagonal Architecture:** Domain, Application, Infrastructure
+- **SOLID Principles:** Código limpo e manutenível
+- **Design Patterns:** Repository, Use Case, DTO
+
+## 🚀 Próximos Passos
+
+### Fase 3 (Planejada)
+- Sistema de pedidos online
+- Carrinho de compras
+- Integração com pagamentos
+- Notificações em tempo real
+
+### Melhorias Técnicas
+- Cache com Redis
+- Monitoramento com Actuator
+- Logs estruturados
+- CI/CD Pipeline
+- Deploy automatizado
