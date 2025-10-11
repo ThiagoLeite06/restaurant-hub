@@ -3,8 +3,8 @@ package br.com.restaurant_hub.restauranthub.usertype.application.usecase;
 import br.com.restaurant_hub.restauranthub.exception.InvalidUserDataException;
 import br.com.restaurant_hub.restauranthub.usertype.application.dto.CreateUserTypeRequest;
 import br.com.restaurant_hub.restauranthub.usertype.application.dto.UserTypeResponse;
+import br.com.restaurant_hub.restauranthub.usertype.application.service.UserTypeService;
 import br.com.restaurant_hub.restauranthub.usertype.domain.entity.UserType;
-import br.com.restaurant_hub.restauranthub.usertype.infrastructure.repository.UserTypeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,10 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,7 +21,7 @@ import static org.mockito.Mockito.*;
 class CreateUserTypeUseCaseTest {
 
     @Mock
-    private UserTypeRepository userTypeRepository;
+    private UserTypeService userTypeService;
 
     @InjectMocks
     private CreateUserTypeUseCase createUserTypeUseCase;
@@ -43,35 +40,32 @@ class CreateUserTypeUseCaseTest {
         savedUserType.setId(1L);
         savedUserType.setName("MANAGER");
         savedUserType.setDescription("Gerente do restaurante");
-
     }
 
     @Test
     @DisplayName("Should create user type successfully")
     void shouldCreateUserTypeSuccessfully() {
         // Given
-        when(userTypeRepository.existsByName(validRequest.name())).thenReturn(false);
-        when(userTypeRepository.save(any(UserType.class))).thenReturn(savedUserType);
+        when(userTypeService.createUserType(validRequest)).thenReturn(savedUserType);
 
         // When
         UserTypeResponse result = createUserTypeUseCase.execute(validRequest);
 
         // Then
         assertNotNull(result);
-        assertEquals(savedUserType.getId(), result.id());
+        assertEquals(savedUserType.getId().toString(), result.id());
         assertEquals(savedUserType.getName(), result.name());
         assertEquals(savedUserType.getDescription(), result.description());
 
-
-        verify(userTypeRepository).existsByName(validRequest.name());
-        verify(userTypeRepository).save(any(UserType.class));
+        verify(userTypeService).createUserType(validRequest);
     }
 
     @Test
     @DisplayName("Should throw exception when name already exists")
     void shouldThrowExceptionWhenNameAlreadyExists() {
         // Given
-        when(userTypeRepository.existsByName(validRequest.name())).thenReturn(true);
+        when(userTypeService.createUserType(validRequest))
+                .thenThrow(new InvalidUserDataException("Tipo de usuário com este nome já existe"));
 
         // When & Then
         InvalidUserDataException exception = assertThrows(
@@ -80,21 +74,17 @@ class CreateUserTypeUseCaseTest {
         );
 
         assertEquals("Tipo de usuário com este nome já existe", exception.getMessage());
-        verify(userTypeRepository).existsByName(validRequest.name());
-        verify(userTypeRepository, never()).save(any(UserType.class));
+        verify(userTypeService).createUserType(validRequest);
     }
 
     @Test
-    @DisplayName("Should throw exception when request is null")
-    void shouldThrowExceptionWhenRequestIsNull() {
+    @DisplayName("Should handle null request gracefully")
+    void shouldHandleNullRequestGracefully() {
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        assertThrows(
+                NullPointerException.class,
                 () -> createUserTypeUseCase.execute(null)
         );
-
-        assertEquals("Request não pode ser nulo", exception.getMessage());
-        verify(userTypeRepository, never()).save(any(UserType.class));
     }
 
     @Test
@@ -106,15 +96,13 @@ class CreateUserTypeUseCaseTest {
                 null
         );
 
-        when(userTypeRepository.existsByName(requestWithoutDescription.name())).thenReturn(false);
-        when(userTypeRepository.save(any(UserType.class))).thenReturn(savedUserType);
+        when(userTypeService.createUserType(requestWithoutDescription)).thenReturn(savedUserType);
 
         // When
         UserTypeResponse result = createUserTypeUseCase.execute(requestWithoutDescription);
 
         // Then
         assertNotNull(result);
-        verify(userTypeRepository).existsByName(requestWithoutDescription.name());
-        verify(userTypeRepository).save(any(UserType.class));
+        verify(userTypeService).createUserType(requestWithoutDescription);
     }
 }

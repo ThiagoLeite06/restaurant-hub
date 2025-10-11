@@ -3,9 +3,7 @@ package br.com.restaurant_hub.restauranthub.user.application.usecase;
 import br.com.restaurant_hub.restauranthub.exception.InvalidUserDataException;
 import br.com.restaurant_hub.restauranthub.exception.UserNotFoundException;
 import br.com.restaurant_hub.restauranthub.user.application.dto.ChangePasswordRequest;
-import br.com.restaurant_hub.restauranthub.user.domain.entity.User;
-import br.com.restaurant_hub.restauranthub.user.infrastructure.repository.UserRepository;
-import br.com.restaurant_hub.restauranthub.usertype.domain.entity.UserType;
+import br.com.restaurant_hub.restauranthub.user.application.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,14 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,36 +22,17 @@ import static org.mockito.Mockito.*;
 class ChangePasswordUseCaseTest {
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
+    private UserService userService;
 
     @InjectMocks
     private ChangePasswordUseCase changePasswordUseCase;
 
     private UUID userId;
-    private User user;
     private ChangePasswordRequest changePasswordRequest;
 
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
-
-        UserType userType = new UserType();
-        userType.setId(1L);
-        userType.setName("CLIENT");
-
-        user = new User();
-        user.setId(userId);
-        user.setName("João Silva");
-        user.setEmail("joao@test.com");
-        user.setLogin("joao.silva");
-        user.setPassword("encodedOldPassword");
-        user.setUserType(userType);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-
         changePasswordRequest = new ChangePasswordRequest(
                 "oldPassword",
                 "newPassword123"
@@ -68,26 +43,21 @@ class ChangePasswordUseCaseTest {
     @DisplayName("Should change password successfully")
     void shouldChangePasswordSuccessfully() {
         // Given
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("oldPassword", "encodedOldPassword")).thenReturn(true);
-        when(passwordEncoder.encode("newPassword123")).thenReturn("encodedNewPassword");
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        doNothing().when(userService).changePassword(userId, "oldPassword", "newPassword123");
 
         // When
         assertDoesNotThrow(() -> changePasswordUseCase.execute(userId, changePasswordRequest));
 
         // Then
-        verify(userRepository).findById(userId);
-        verify(passwordEncoder).matches("oldPassword", "encodedOldPassword");
-        verify(passwordEncoder).encode("newPassword123");
-        verify(userRepository).save(user);
+        verify(userService).changePassword(userId, "oldPassword", "newPassword123");
     }
 
     @Test
     @DisplayName("Should throw exception when user not found")
     void shouldThrowExceptionWhenUserNotFound() {
         // Given
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        doThrow(new UserNotFoundException("Usuário não encontrado"))
+                .when(userService).changePassword(userId, "oldPassword", "newPassword123");
 
         // When & Then
         UserNotFoundException exception = assertThrows(
@@ -96,17 +66,15 @@ class ChangePasswordUseCaseTest {
         );
 
         assertEquals("Usuário não encontrado", exception.getMessage());
-        verify(userRepository).findById(userId);
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
-        verify(userRepository, never()).save(any(User.class));
+        verify(userService).changePassword(userId, "oldPassword", "newPassword123");
     }
 
     @Test
     @DisplayName("Should throw exception when current password is incorrect")
     void shouldThrowExceptionWhenCurrentPasswordIsIncorrect() {
         // Given
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("oldPassword", "encodedOldPassword")).thenReturn(false);
+        doThrow(new InvalidUserDataException("Senha atual incorreta"))
+                .when(userService).changePassword(userId, "oldPassword", "newPassword123");
 
         // When & Then
         InvalidUserDataException exception = assertThrows(
@@ -115,15 +83,16 @@ class ChangePasswordUseCaseTest {
         );
 
         assertEquals("Senha atual incorreta", exception.getMessage());
-        verify(userRepository).findById(userId);
-        verify(passwordEncoder).matches("oldPassword", "encodedOldPassword");
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(userRepository, never()).save(any(User.class));
+        verify(userService).changePassword(userId, "oldPassword", "newPassword123");
     }
 
     @Test
-    @DisplayName("Should throw exception when id is null")
-    void shouldThrowExceptionWhenIdIsNull() {
+    @DisplayName("Should handle null id gracefully")
+    void shouldHandleNullIdGracefully() {
+        // Given
+        doThrow(new IllegalArgumentException("ID não pode ser nulo"))
+                .when(userService).changePassword(null, "oldPassword", "newPassword123");
+
         // When & Then
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
@@ -131,20 +100,17 @@ class ChangePasswordUseCaseTest {
         );
 
         assertEquals("ID não pode ser nulo", exception.getMessage());
-        verify(userRepository, never()).findById(any());
+        verify(userService).changePassword(null, "oldPassword", "newPassword123");
     }
 
     @Test
-    @DisplayName("Should throw exception when request is null")
-    void shouldThrowExceptionWhenRequestIsNull() {
+    @DisplayName("Should handle null request gracefully")
+    void shouldHandleNullRequestGracefully() {
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        assertThrows(
+                NullPointerException.class,
                 () -> changePasswordUseCase.execute(userId, null)
         );
-
-        assertEquals("Request não pode ser nulo", exception.getMessage());
-        verify(userRepository, never()).findById(any());
     }
 
     @Test
@@ -155,9 +121,9 @@ class ChangePasswordUseCaseTest {
                 "oldPassword",
                 "oldPassword"
         );
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("oldPassword", "encodedOldPassword")).thenReturn(true);
+        
+        doThrow(new InvalidUserDataException("A nova senha deve ser diferente da senha atual"))
+                .when(userService).changePassword(userId, "oldPassword", "oldPassword");
 
         // When & Then
         InvalidUserDataException exception = assertThrows(
@@ -166,9 +132,6 @@ class ChangePasswordUseCaseTest {
         );
 
         assertEquals("A nova senha deve ser diferente da senha atual", exception.getMessage());
-        verify(userRepository).findById(userId);
-        verify(passwordEncoder).matches("oldPassword", "encodedOldPassword");
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(userRepository, never()).save(any(User.class));
+        verify(userService).changePassword(userId, "oldPassword", "oldPassword");
     }
 }

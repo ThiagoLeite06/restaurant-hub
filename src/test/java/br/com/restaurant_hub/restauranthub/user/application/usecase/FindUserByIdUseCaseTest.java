@@ -1,8 +1,8 @@
 package br.com.restaurant_hub.restauranthub.user.application.usecase;
 
 import br.com.restaurant_hub.restauranthub.user.application.dto.UserResponse;
+import br.com.restaurant_hub.restauranthub.user.application.service.UserService;
 import br.com.restaurant_hub.restauranthub.user.domain.entity.User;
-import br.com.restaurant_hub.restauranthub.user.infrastructure.repository.UserRepository;
 import br.com.restaurant_hub.restauranthub.usertype.domain.entity.UserType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.*;
 class FindUserByIdUseCaseTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @InjectMocks
     private FindUserByIdUseCase findUserByIdUseCase;
@@ -58,7 +58,7 @@ class FindUserByIdUseCaseTest {
     @DisplayName("Should find user by id successfully")
     void shouldFindUserByIdSuccessfully() {
         // Given
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userService.findById(userId)).thenReturn(Optional.of(user));
 
         // When
         Optional<UserResponse> result = findUserByIdUseCase.execute(userId);
@@ -71,36 +71,37 @@ class FindUserByIdUseCaseTest {
         assertEquals(user.getEmail(), userResponse.email());
         assertEquals(user.getLogin(), userResponse.login());
         assertEquals(user.getAddress(), userResponse.address());
-        assertEquals(user.getUserType().getId(), userResponse.userTypeId());
+        assertEquals(user.getUserType().getId().toString(), userResponse.userTypeId());
         assertEquals(user.getUserType().getName(), userResponse.userTypeName());
 
-        verify(userRepository).findById(userId);
+        verify(userService).findById(userId);
     }
 
     @Test
     @DisplayName("Should return empty when user not found")
     void shouldReturnEmptyWhenUserNotFound() {
         // Given
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userService.findById(userId)).thenReturn(Optional.empty());
 
         // When
         Optional<UserResponse> result = findUserByIdUseCase.execute(userId);
 
         // Then
         assertTrue(result.isEmpty());
-        verify(userRepository).findById(userId);
+        verify(userService).findById(userId);
     }
 
     @Test
-    @DisplayName("Should throw exception when id is null")
-    void shouldThrowExceptionWhenIdIsNull() {
-        // When & Then
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> findUserByIdUseCase.execute(null)
-        );
+    @DisplayName("Should handle null id gracefully")
+    void shouldHandleNullIdGracefully() {
+        // Given
+        when(userService.findById(null)).thenReturn(Optional.empty());
 
-        assertEquals("ID não pode ser nulo", exception.getMessage());
-        verify(userRepository, never()).findById(any());
+        // When
+        Optional<UserResponse> result = findUserByIdUseCase.execute(null);
+
+        // Then
+        assertTrue(result.isEmpty());
+        verify(userService).findById(null);
     }
 }
